@@ -36,6 +36,7 @@ int BALL_SPEED_Y = 2;
 int player_position_y0 = INITIAL_Y_PLAYER;
 int player_position_y1 = player_position_y0 + PLAYER_LENGTH;
 
+int score = 0;
 
 Adafruit_SSD1306 display(OLED_RESET);
 
@@ -52,6 +53,14 @@ void setup() {
 
   // Clear the buffer.
   display.clearDisplay();
+}
+
+void print_score() {
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(SSD1306_LCDWIDTH / 2, 3);
+  display.print("score: ");
+  display.println(score);
 }
 
 void reset_game_field() {
@@ -74,6 +83,8 @@ void reset_game_field() {
 
   display.drawRect(0, BLUE_FIELD_FIRST_PIXEL, BORDER_WIDTH, BORDER_HEIGHT, WHITE);
 
+  score = 0;
+  print_score();
   display.display();
 }
 
@@ -81,8 +92,11 @@ void ball_movement(double *ball_x, double *ball_y) {
   if (*ball_x == SSD1306_LCDWIDTH - BALL_RADIUS *2 ||
       (*ball_x == INITIAL_X_PLAYER_1 + BALL_RADIUS *2
         && *ball_y >= player_position_y0 && *ball_y <= player_position_y1)) {
-    BALL_SPEED_X = BALL_SPEED_X * -1;
-  } else if (*ball_x < INITIAL_X_PLAYER_1){
+          BALL_SPEED_X = BALL_SPEED_X * -1;
+          if(*ball_x == INITIAL_X_PLAYER_1 + BALL_RADIUS *2) {
+            score++;
+          }
+  } else if (*ball_x < INITIAL_X_PLAYER_1) {
       BALL_SPEED_X = 0;
       BALL_SPEED_Y = 0;
 
@@ -146,6 +160,7 @@ void loop() {
     }
 
     ball_movement(&ball_x, &ball_y);
+    print_score();
     display.fillCircle(ball_x, ball_y, BALL_RADIUS, WHITE);
     // Show image buffer on the display hardware.
     // Since the buffer is intialized with an Adafruit splashscreen
