@@ -16,8 +16,15 @@
 #define PLAYER_LENGTH SSD1306_LCDHEIGHT / 4
 #define INITIAL_Y_PLAYER SSD1306_LCDHEIGHT / 4
 #define INITIAL_X_PLAYER_1 SSD1306_LCDWIDTH / 32
+#define BALL_RADIUS 2
 
 int y0, y1;
+double ball_x = SSD1306_LCDWIDTH / 2;
+double ball_y = SSD1306_LCDHEIGHT / 2;
+
+int BALL_SPEED_X = 2;
+int BALL_SPEED_Y = 2;
+
 
 Adafruit_SSD1306 display(OLED_RESET);
 
@@ -34,18 +41,32 @@ void setup() {
 
   // Clear the buffer.
   display.clearDisplay();
-
-  display.drawLine(INITIAL_X_PLAYER_1,
-                    INITIAL_Y_PLAYER,
-                    INITIAL_X_PLAYER_1,
-                    INITIAL_Y_PLAYER + PLAYER_LENGTH,
-                    WHITE
-                  );
-  // Show image buffer on the display hardware.
-  // Since the buffer is intialized with an Adafruit splashscreen
-  // internally, this will display the splashscreen.
-  display.display();
 }
+
+void ball_movement(double *ball_x, double *ball_y) {
+  if (*ball_x == SSD1306_LCDWIDTH - BALL_RADIUS *2 ) {
+    BALL_SPEED_X = BALL_SPEED_X * -1;
+  }
+
+  if (*ball_y == SSD1306_LCDHEIGHT - BALL_RADIUS *2 || *ball_y == BALL_RADIUS *2) {
+    BALL_SPEED_Y = BALL_SPEED_Y * -1;
+  }
+
+  *ball_x += BALL_SPEED_X;
+  *ball_y += BALL_SPEED_Y;
+
+  if (*ball_x > SSD1306_LCDWIDTH) {
+    *ball_x = SSD1306_LCDWIDTH - BALL_RADIUS *2;
+  }
+  if (*ball_y > SSD1306_LCDHEIGHT) {
+    *ball_y = SSD1306_LCDHEIGHT - BALL_RADIUS *2;
+  }
+  if(*ball_y < BALL_RADIUS *2){
+    *ball_y = BALL_RADIUS *2;
+  }
+}
+
+
 
 void loop() {
     display.clearDisplay();
@@ -64,7 +85,13 @@ void loop() {
         INITIAL_Y_PLAYER + PLAYER_LENGTH + y1,
         WHITE
       );
-      display.display();
     }
+
+    ball_movement(&ball_x, &ball_y);
+    display.fillCircle(ball_x, ball_y, BALL_RADIUS, WHITE);
+    // Show image buffer on the display hardware.
+    // Since the buffer is intialized with an Adafruit splashscreen
+    // internally, this will display the splashscreen.
+    display.display();
     delay(200);
 }
