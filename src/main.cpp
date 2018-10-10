@@ -8,7 +8,7 @@
 #define OLED_RESET LED_BUILTIN
 #define X_PIN PC1
 #define Y_PIN PC0
-#define BUTTON PB1
+#define BUTTON PD4
 
 #define AXIS_Y_MIN 0
 #define AXIS_Y_MID 350
@@ -45,7 +45,7 @@ void setup() {
 
   pinMode(X_PIN, INPUT);
   pinMode(Y_PIN, INPUT);
-  pinMode(BUTTON, INPUT);
+  pinMode(BUTTON, INPUT_PULLUP);
 
   // by default, we'll generate the high voltage from the 3.3v line internally!
   // (neat!)
@@ -86,59 +86,61 @@ void reset_game_field() {
   display.display();
 }
 
-void ball_movement(double *ball_x, double *ball_y) {
-  double ball_X;
-  double ball_Y;
-  ball_x = &ball_X;
-  ball_y = &ball_Y;
-
-  if (ball_X == SSD1306_LCDWIDTH - BALL_RADIUS * 2 ||
-      (ball_X == INITIAL_X_PLAYER_1 + BALL_RADIUS * 2 &&
-       ball_Y >= player_position_y0 && ball_Y <= player_position_y1)) {
+void ball_movement(double &ball_x, double &ball_y) {
+  if (ball_x == SSD1306_LCDWIDTH - BALL_RADIUS * 2 ||
+      (ball_x == INITIAL_X_PLAYER_1 + BALL_RADIUS * 2 &&
+       ball_y >= player_position_y0 && ball_y <= player_position_y1)) {
     BALL_SPEED_X = BALL_SPEED_X * -1;
-    if (ball_X == INITIAL_X_PLAYER_1 + BALL_RADIUS * 2) {
+    if (ball_x == INITIAL_X_PLAYER_1 + BALL_RADIUS * 2) {
       score++;
     }
-  } else if (ball_X < INITIAL_X_PLAYER_1) {
+  } else if (ball_x < INITIAL_X_PLAYER_1) {
     BALL_SPEED_X = 0;
     BALL_SPEED_Y = 0;
 
-    delay(3000);
+    delay(1000);
 
     display.invertDisplay(true);
-    delay(300);
+    delay(200);
     display.invertDisplay(false);
-    delay(300);
+    delay(200);
     display.invertDisplay(true);
-    delay(300);
+    delay(200);
     display.invertDisplay(false);
-    delay(300);
-    display.invertDisplay(true);
-    delay(300);
-    display.invertDisplay(false);
-    delay(300);
+    delay(200);
     display.clearDisplay();
     reset_game_field();
     // return;
   }
 
-  if (ball_Y == SSD1306_LCDHEIGHT - BALL_RADIUS * 2 ||
-      ball_Y == BLUE_FIELD_FIRST_PIXEL + BALL_RADIUS * 2) {
+  if (ball_y == SSD1306_LCDHEIGHT - BALL_RADIUS * 2 ||
+      ball_y == BLUE_FIELD_FIRST_PIXEL + BALL_RADIUS * 2) {
     BALL_SPEED_Y = BALL_SPEED_Y * -1;
   }
 
-  ball_X += BALL_SPEED_X;
-  ball_Y += BALL_SPEED_Y;
+  ball_x += BALL_SPEED_X;
+  ball_y += BALL_SPEED_Y;
 
-  if (ball_X > SSD1306_LCDWIDTH) {
-    ball_X = SSD1306_LCDWIDTH - BALL_RADIUS * 2;
+  if (ball_x > SSD1306_LCDWIDTH) {
+    ball_x = SSD1306_LCDWIDTH - BALL_RADIUS * 2;
   }
-  if (ball_Y > SSD1306_LCDHEIGHT) {
-    ball_Y = SSD1306_LCDHEIGHT - BALL_RADIUS * 2;
+  if (ball_y > SSD1306_LCDHEIGHT) {
+    ball_y = SSD1306_LCDHEIGHT - BALL_RADIUS * 2;
   }
-  if (ball_Y < BLUE_FIELD_FIRST_PIXEL + BALL_RADIUS * 2) {
-    ball_Y = BLUE_FIELD_FIRST_PIXEL + BALL_RADIUS * 2;
+  if (ball_y < BLUE_FIELD_FIRST_PIXEL + BALL_RADIUS * 2) {
+    ball_y = BLUE_FIELD_FIRST_PIXEL + BALL_RADIUS * 2;
   }
+}
+
+void pause() {
+  // display.clearDisplay();
+  // display.display();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(SSD1306_LCDWIDTH / 8, 3);
+  display.print("pause");
+  delay(3000);
+  display.clearDisplay();
 }
 
 void loop() {
@@ -161,7 +163,7 @@ void loop() {
                      player_position_y1, WHITE);
   }
 
-  ball_movement(&ball_x, &ball_y);
+  ball_movement(ball_x, ball_y);
   print_score();
   display.fillCircle(ball_x, ball_y, BALL_RADIUS, WHITE);
   // Show image buffer on the display hardware.
@@ -169,4 +171,6 @@ void loop() {
   // internally, this will display the splashscreen.
   display.display();
   delay(1);
+  if (!digitalRead(BUTTON) == 1)
+    pause();
 }
